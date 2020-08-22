@@ -6,6 +6,7 @@ import lk.spark.pasan.enums.Role;
 import lk.spark.pasan.helpers.Database;
 import lk.spark.pasan.helpers.DbFunctions;
 import lk.spark.pasan.helpers.Http;
+import lk.spark.pasan.models.Hospital;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -15,8 +16,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.*;
-import java.util.Base64;
-import java.util.UUID;
+import java.sql.Date;
+import java.util.*;
 
 @WebServlet(name = "PatientController")
 public class PatientController extends HttpServlet {
@@ -28,6 +29,10 @@ public class PatientController extends HttpServlet {
 
         // Actual logic goes here.
         PrintWriter out = resp.getWriter();
+
+
+        this.allocateBeds();
+
         out.println("<h1>Test</h1>");
     }
 
@@ -41,10 +46,12 @@ public class PatientController extends HttpServlet {
         int geolocationY = Integer.parseInt(req.getParameter("geolocation_y"));
         String contactNumber = req.getParameter("contact_number");
         int userId = 0;
+        int patinetId = 0;
 
         try {
             Connection connection = Database.open();
             PreparedStatement statement;
+            ResultSet resultSet;
 
             statement = connection.prepareStatement("SELECT COUNT(*) FROM users WHERE email=?");
             statement.setString(1, email);
@@ -55,7 +62,7 @@ public class PatientController extends HttpServlet {
                 statement.setString(3, Base64.getEncoder().encodeToString(password.getBytes()));
                 statement.setInt(4, Role.USER.getRole());
                 statement.executeUpdate();
-                ResultSet resultSet = statement.getGeneratedKeys();
+                resultSet = statement.getGeneratedKeys();
                 if (resultSet.next()) {
                     userId = resultSet.getInt(1);
                 }
@@ -73,25 +80,17 @@ public class PatientController extends HttpServlet {
                 statement.setDate(6, new java.sql.Date(new java.util.Date().getTime()));
                 statement.executeUpdate();
 
-                UUID uuid = UUID.randomUUID();
+                resultSet = statement.getGeneratedKeys();
+                if (resultSet.next()) {
+                    patinetId = resultSet.getInt(1);
+                }
 
-//                statement = connection.prepareStatement("INSERT INTO patients (user_id, serial_no, geolocation_x, geolocation_y, contact_number, status, register_date, admission_date) VALUES (?,?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
-//                statement.setInt(1, userId);
-//                statement.setString(2, uuid.toString());
-//                statement.setInt(3, geolocationX);
-//                statement.setInt(4, geolocationY);
-//                statement.setString(5, contactNumber);
-//                statement.setInt(6, patientStatus.getStatus());
-//                statement.setDate(7, new java.sql.Date(new java.util.Date().getTime()));
-//                statement.setDate(8, new java.sql.Date(new java.util.Date().getTime()));
-//                statement.executeUpdate();
-
-                statement.close();
+                this.allocateBeds();
 
                 resp = Http.setResponse(resp, 200);
 
                 JsonObject json = new JsonObject();
-                json.addProperty("serial_no", uuid.toString());
+                json.addProperty("patient_id", patinetId);
 
                 Http.getWriter(resp.getWriter(), "success", "User added", json, null).flush();
             } else {
@@ -106,5 +105,64 @@ public class PatientController extends HttpServlet {
             resp.sendError(500, "Database Connection Failed");
         }
 
+    }
+
+    /**
+     * Check for patients is the queue and add to hospital
+     */
+    private void allocateBeds() {
+        try {
+            Connection connection = Database.open();
+            PreparedStatement statement;
+            ResultSet resultSet;
+
+            ArrayList<Hospital> hospitals = new ArrayList<Hospital>();
+            statement = connection.prepareStatement("SELECT * FROM hospitals");
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                hospitals.add(new Hospital(resultSet.getInt("id"), resultSet.getInt("user_id"), resultSet.getInt("district"), resultSet.getInt("geolocation_x"), resultSet.getInt("geolocation_y")));
+            }
+
+            statement = connection.prepareStatement("SELECT * FROM patients WHERE status=0 ORDER BY id DESC");
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                HashMap<Integer, Double> hospitalDistances = new HashMap<Integer, Double>();
+
+                for (int i = 0; i < hospitals.size(); i++) {
+                    Hospital hospital = hospitals.get(i);
+
+                    if (hospital.getAvailableBedsCount() > 0) {
+                        hospitalDistances.put(hospital.getId(), hospital.getDistanceToHospital(resultSet.getInt("geolocation_x"), resultSet.getInt("geolocation_y")));
+                    }
+                }
+
+                Map.Entry<Integer, Double> min = null;
+                for (Map.Entry<Integer, Double> entry : hospitalDistances.entrySet()) {
+                    if (min == null || min.getValue() > entry.getValue()) {
+                        min = entry;
+                    }
+                }
+
+                if (min != null){
+                    UUID uuid = UUID.randomUUID();
+
+                    statement = connection.prepareStatement("UPDATE patients SET serial_no=?, admission_date=?, status=? WHERE id=?");
+                    statement.setString(1, uuid.toString());
+                    statement.setDate(2, new java.sql.Date(new java.util.Date().getTime()));
+                    statement.setInt(3, PatientStatus.ADMITTED.getStatus());
+                    statement.setInt(4, resultSet.getInt("id"));
+                    statement.executeUpdate();
+
+                    statement = connection.prepareStatement("UPDATE beds SET serial_no=? WHERE hospital_id=? and serial_no IS NULL LIMIT 1");
+                    statement.setString(1, uuid.toString());
+                    statement.setInt(2, min.getKey());
+                    statement.executeUpdate();
+                }
+
+                connection.close();
+            }
+        } catch (Exception exception) {
+
+        }
     }
 }

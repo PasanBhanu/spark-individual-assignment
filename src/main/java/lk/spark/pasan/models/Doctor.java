@@ -7,9 +7,10 @@ import lk.spark.pasan.enums.Role;
  */
 public class Doctor extends User {
     private int hospitalId;
+    private int id;
 
-    public Doctor(String name, String email, String password, Role role, int hospitalId) {
-        super(name, email, password, role);
+    public Doctor(int id, String name, String email, int hospitalId) {
+        super(name, email, Role.DOCTOR);
         this.hospitalId = hospitalId;
     }
 

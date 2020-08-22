@@ -7,6 +7,6 @@ import lk.spark.pasan.enums.Role;
  */
 public class Moh extends User {
     public Moh(String name, String email, String password, Role role) {
-        super(name, email, password, role);
+        super(name, email, role);
     }
 }

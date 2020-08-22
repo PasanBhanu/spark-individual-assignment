@@ -9,4 +9,9 @@ public class Bed {
 
     public Patient patient;
 
+    public Bed(int id, int hospitalId, String serialNo) {
+        this.id = id;
+        this.hospitalId = hospitalId;
+        this.serialNo = serialNo;
+    }
 }

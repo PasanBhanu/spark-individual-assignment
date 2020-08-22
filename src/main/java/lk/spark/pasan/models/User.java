@@ -12,17 +12,10 @@ public class User {
     private String password;
     private Role role;
 
-    /**
-     * Create user
-     * @param name
-     * @param email
-     * @param password
-     * @param role
-     */
-    public User(String name, String email, String password, Role role) {
+
+    public User(String name, String email, Role role) {
         this.name = name;
         this.email = email;
-        this.password = password;
         this.role = role;
     }
 
