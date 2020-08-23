@@ -1,5 +1,6 @@
 package lk.spark.pasan.helpers;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import javax.servlet.http.HttpServletResponse;
@@ -15,7 +16,7 @@ public class Http {
         return resp;
     }
 
-    public static PrintWriter getWriter(PrintWriter writer, String status, String message, JsonObject data, JsonObject errors) {
+    public static PrintWriter getWriter(PrintWriter writer, String status, String message, JsonObject data, JsonArray errors) {
         JsonObject json = new JsonObject();
         json.addProperty("status", status);
         json.addProperty("message", message);

@@ -1,12 +1,15 @@
 package lk.spark.pasan.controllers;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import lk.spark.pasan.enums.HttpStatus;
 import lk.spark.pasan.enums.PatientStatus;
 import lk.spark.pasan.enums.Role;
 import lk.spark.pasan.helpers.Database;
 import lk.spark.pasan.helpers.DbFunctions;
 import lk.spark.pasan.helpers.Http;
 import lk.spark.pasan.models.Hospital;
+import lk.spark.pasan.models.Patient;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -22,31 +25,94 @@ import java.util.*;
 @WebServlet(name = "PatientController")
 public class PatientController extends HttpServlet {
 
+    /**
+     * Get patient information
+     * @param req
+     * @param resp
+     * @throws ServletException
+     * @throws IOException
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        // Set response content type
-        resp.setContentType("text/html");
+        JsonArray errorArray;
 
-        // Actual logic goes here.
-        PrintWriter out = resp.getWriter();
+        errorArray = new JsonArray();
+        if (req.getParameter("id").isEmpty()) {
+            errorArray.add("User id is required");
 
+            Http.setResponse(resp, 403);
+            Http.getWriter(resp.getWriter(), HttpStatus.ERROR.getStatus(), "forbidden", null, errorArray).flush();
+            return;
+        }
 
-        this.allocateBeds();
+        Patient patient = new Patient(Integer.parseInt(req.getParameter("id")));
+        patient.loadModel();
 
-        out.println("<h1>Test</h1>");
+        Http.setResponse(resp, 200);
+        Http.getWriter(resp.getWriter(), HttpStatus.SUCCESS.getStatus(), "loaded", patient.serialize(), null).flush();
+        return;
     }
 
+    /**
+     * Register new patient in NCMS
+     *
+     * @param req
+     * @param resp
+     * @throws ServletException
+     * @throws IOException
+     */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        JsonArray errorArray;
+
+        errorArray = new JsonArray();
+        if (req.getParameter("name").isEmpty()) {
+            errorArray.add("Name is required");
+        }
+        if (req.getParameter("email").isEmpty()) {
+            errorArray.add("Email is required");
+        }
+        if (req.getParameter("contact_number").isEmpty()) {
+            errorArray.add("Contact number is required");
+        }
+        if (req.getParameter("password").isEmpty()) {
+            errorArray.add("Password is required");
+        }
+        if (req.getParameter("geolocation_x").isEmpty()) {
+            errorArray.add("Geolocation X is required");
+        }
+        if (req.getParameter("geolocation_y").isEmpty()) {
+            errorArray.add("Geolocation Y is required");
+        }
+        if (!req.getParameter("password").equals(req.getParameter("c_password"))) {
+            errorArray.add("Password and confirm password does not match");
+        }
+
+        if (errorArray.size() > 0) {
+            Http.setResponse(resp, 400);
+            Http.getWriter(resp.getWriter(), HttpStatus.ERROR.getStatus(), "invalid data", null, errorArray).flush();
+            return;
+        }
+
         String name = req.getParameter("name");
         String email = req.getParameter("email");
         String password = req.getParameter("password");
-        String cPassword = req.getParameter("c_password");
-        int geolocationX = Integer.parseInt(req.getParameter("geolocation_x"));
-        int geolocationY = Integer.parseInt(req.getParameter("geolocation_y"));
         String contactNumber = req.getParameter("contact_number");
-        int userId = 0;
-        int patinetId = 0;
+
+        int geolocationX = 0, geolocationY = 0;
+
+        try {
+            geolocationX = Integer.parseInt(req.getParameter("geolocation_x"));
+            geolocationY = Integer.parseInt(req.getParameter("geolocation_y"));
+        } catch (Exception NumberFormatException) {
+            errorArray = new JsonArray();
+            errorArray.add("Invalid geolocation data");
+            Http.setResponse(resp, 400);
+            Http.getWriter(resp.getWriter(), HttpStatus.ERROR.getStatus(), "invalid data", null, errorArray).flush();
+            return;
+        }
+
+        int userId = 0, patinetId = 0;
 
         try {
             Connection connection = Database.open();
@@ -67,16 +133,12 @@ public class PatientController extends HttpServlet {
                     userId = resultSet.getInt(1);
                 }
 
-                PatientStatus patientStatus = PatientStatus.IN_QUEUE;
-
-                java.util.Date date = new java.util.Date();
-
                 statement = connection.prepareStatement("INSERT INTO patients (user_id, geolocation_x, geolocation_y, contact_number, status, register_date) VALUES (?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
                 statement.setInt(1, userId);
                 statement.setInt(2, geolocationX);
                 statement.setInt(3, geolocationY);
                 statement.setString(4, contactNumber);
-                statement.setInt(5, patientStatus.getStatus());
+                statement.setInt(5, PatientStatus.IN_QUEUE.getStatus());
                 statement.setDate(6, new java.sql.Date(new java.util.Date().getTime()));
                 statement.executeUpdate();
 
@@ -87,24 +149,26 @@ public class PatientController extends HttpServlet {
 
                 this.allocateBeds();
 
+                JsonObject dataObject = new JsonObject();
+                dataObject.addProperty("user_id", userId);
+                dataObject.addProperty("patient_id", patinetId);
+
                 resp = Http.setResponse(resp, 200);
-
-                JsonObject json = new JsonObject();
-                json.addProperty("patient_id", patinetId);
-
-                Http.getWriter(resp.getWriter(), "success", "User added", json, null).flush();
+                Http.getWriter(resp.getWriter(), HttpStatus.SUCCESS.getStatus(), "user added", dataObject, null).flush();
             } else {
+                errorArray = new JsonArray();
+                errorArray.add("Email already in the system");
+
                 resp = Http.setResponse(resp, 400);
-
-                JsonObject json = new JsonObject();
-                json.addProperty("email", "Email already in the system");
-
-                Http.getWriter(resp.getWriter(), "error", "Invalid data", null, json).flush();
+                Http.getWriter(resp.getWriter(), HttpStatus.ERROR.getStatus(), "invalid data", null, errorArray).flush();
             }
         } catch (Exception e) {
-            resp.sendError(500, "Database Connection Failed");
-        }
+            errorArray = new JsonArray();
+            errorArray.add("Database connection failed");
 
+            resp = Http.setResponse(resp, 500);
+            Http.getWriter(resp.getWriter(), HttpStatus.ERROR.getStatus(), "server error", null, errorArray).flush();
+        }
     }
 
     /**
@@ -143,7 +207,7 @@ public class PatientController extends HttpServlet {
                     }
                 }
 
-                if (min != null){
+                if (min != null) {
                     UUID uuid = UUID.randomUUID();
 
                     statement = connection.prepareStatement("UPDATE patients SET serial_no=?, admission_date=?, status=? WHERE id=?");
@@ -162,7 +226,7 @@ public class PatientController extends HttpServlet {
                 connection.close();
             }
         } catch (Exception exception) {
-
+            // Add system log - For administrative purpose only
         }
     }
 }

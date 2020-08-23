@@ -9,10 +9,14 @@ public class User {
     private int id;
     private String name;
     private String email;
-    private String password;
     private Role role;
 
-
+    /**
+     * Create new user
+     * @param name
+     * @param email
+     * @param role
+     */
     public User(String name, String email, Role role) {
         this.name = name;
         this.email = email;
