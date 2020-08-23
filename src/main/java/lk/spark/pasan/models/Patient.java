@@ -15,7 +15,7 @@ import java.util.Date;
 /**
  * Patient data model
  */
-public class Patient implements DatabaseModel {
+public class Patient extends User implements DatabaseModel {
     private int id;
     private int userId;
     private String serialNo;
@@ -37,6 +37,15 @@ public class Patient implements DatabaseModel {
      */
     public Patient(int id) {
         this.id = id;
+    }
+
+    /**
+     * Get patient serial number
+     *
+     * @return Serial number
+     */
+    public String getSerialNo() {
+        return serialNo;
     }
 
     /**

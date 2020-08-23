@@ -12,6 +12,13 @@ public class User {
     private Role role;
 
     /**
+     * Default constructor
+     */
+    public User(){
+
+    }
+
+    /**
      * Create new user
      * @param name
      * @param email
