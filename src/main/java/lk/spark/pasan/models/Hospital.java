@@ -1,16 +1,21 @@
 package lk.spark.pasan.models;
 
+import com.google.gson.JsonObject;
+import lk.spark.pasan.enums.DeceaseLevel;
+import lk.spark.pasan.enums.PatientStatus;
 import lk.spark.pasan.helpers.Database;
 import lk.spark.pasan.helpers.DbFunctions;
+import lk.spark.pasan.interfaces.DatabaseModel;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 
-public class Hospital {
+public class Hospital implements DatabaseModel {
     protected final int BED_COUNT = 10;
     private int id;
+    private String name;
     private int userId;
     private int district;
     private int geolocationX;
@@ -20,8 +25,13 @@ public class Hospital {
 
     public ArrayList<Bed> beds;
 
-    public Hospital(int id, int userId, int district, int geolocationX, int geolocationY) {
+    public Hospital(int id) {
         this.id = id;
+    }
+
+    public Hospital(int id, String name, int userId, int district, int geolocationX, int geolocationY) {
+        this.id = id;
+        this.name = name;
         this.userId = userId;
         this.district = district;
         this.geolocationX = geolocationX;
@@ -33,10 +43,78 @@ public class Hospital {
     }
 
     /**
-     * Load all the relations
+     * Get available beds
+     *
+     * @return bed count
      */
-    public void loadModel(){
-        try{
+    public int getAvailableBedsCount() {
+        try {
+            Connection connection = Database.open();
+            PreparedStatement statement;
+            ResultSet resultSet;
+
+            this.beds = new ArrayList<Bed>();
+
+            statement = connection.prepareStatement("SELECT COUNT(*) FROM beds WHERE hospital_id=? and serial_no IS NULL");
+            statement.setInt(1, this.id);
+
+            int count = DbFunctions.count(statement.executeQuery());
+            connection.close();
+
+            return count;
+        } catch (Exception exception) {
+            return 0;
+        }
+    }
+
+    /**
+     * Get the distance to a hospital from a given coordinates
+     *
+     * @param geolocationX
+     * @param geolocationY
+     * @return
+     */
+    public double getDistanceToHospital(int geolocationX, int geolocationY) {
+        int xDifference = Math.abs(this.geolocationX - geolocationX);
+        int yDifference = Math.abs(this.geolocationY - geolocationY);
+
+        double distance = Math.sqrt(Math.pow(xDifference, 2) + Math.pow(yDifference, 2));
+
+        return distance;
+    }
+
+    /**
+     * Load data from database
+     */
+    @Override
+    public void loadModel() {
+        try {
+            Connection connection = Database.open();
+            PreparedStatement statement;
+            ResultSet resultSet;
+
+            statement = connection.prepareStatement("SELECT * FROM hospitals WHERE id=? LIMIT 1");
+            statement.setInt(1, this.id);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                this.userId = resultSet.getInt("user_id");
+                this.district = resultSet.getInt("district");
+                this.geolocationX = resultSet.getInt("geolocation_x");
+                this.geolocationY = resultSet.getInt("geolocation_y");
+            }
+
+            connection.close();
+        } catch (Exception exception) {
+
+        }
+    }
+
+    /**
+     * Load relationships
+     */
+    @Override
+    public void loadRelationalModels() {
+        try {
             Connection connection = Database.open();
             PreparedStatement statement;
             ResultSet resultSet;
@@ -58,47 +136,27 @@ public class Hospital {
             }
 
             connection.close();
-        }catch (Exception exception){
+        } catch (Exception exception) {
 
         }
     }
 
     /**
-     * Get available beds
-     * @return bed count
-     */
-    public int getAvailableBedsCount(){
-        try{
-            Connection connection = Database.open();
-            PreparedStatement statement;
-            ResultSet resultSet;
-
-            this.beds = new ArrayList<Bed>();
-
-            statement = connection.prepareStatement("SELECT COUNT(*) FROM beds WHERE hospital_id=? and serial_no IS NULL");
-            statement.setInt(1, this.id);
-
-            int count = DbFunctions.count(statement.executeQuery());
-            connection.close();
-
-            return count;
-        }catch (Exception exception){
-            return 0;
-        }
-    }
-
-    /**
-     * Get the distance to a hospital from a given coordinates
-     * @param geolocationX
-     * @param geolocationY
+     * Serialise model to Json Object
+     *
      * @return
      */
-    public double getDistanceToHospital(int geolocationX, int geolocationY){
-        int xDifference = Math.abs(this.geolocationX - geolocationX);
-        int yDifference = Math.abs(this.geolocationY - geolocationY);
+    @Override
+    public JsonObject serialize(){
+        JsonObject dataObject = new JsonObject();
 
-        double distance = Math.sqrt(Math.pow(xDifference, 2) + Math.pow(yDifference, 2));
+        dataObject.addProperty("id", this.id);
+        dataObject.addProperty("name", this.name);
+        dataObject.addProperty("user_id", this.userId);
+        dataObject.addProperty("district", this.userId);
+        dataObject.addProperty("geolocation_x", this.geolocationX);
+        dataObject.addProperty("geolocation_y", this.geolocationY);
 
-        return distance;
+        return dataObject;
     }
 }

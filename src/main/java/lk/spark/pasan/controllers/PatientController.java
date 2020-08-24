@@ -286,7 +286,7 @@ public class PatientController extends HttpServlet {
             statement = connection.prepareStatement("SELECT * FROM hospitals");
             resultSet = statement.executeQuery();
             while (resultSet.next()) {
-                hospitals.add(new Hospital(resultSet.getInt("id"), resultSet.getInt("user_id"), resultSet.getInt("district"), resultSet.getInt("geolocation_x"), resultSet.getInt("geolocation_y")));
+                hospitals.add(new Hospital(resultSet.getInt("id"), resultSet.getString("name"), resultSet.getInt("user_id"), resultSet.getInt("district"), resultSet.getInt("geolocation_x"), resultSet.getInt("geolocation_y")));
             }
 
             statement = connection.prepareStatement("SELECT * FROM patients WHERE status=0 ORDER BY id DESC");
