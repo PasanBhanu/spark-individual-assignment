@@ -269,7 +269,6 @@ public class HospitalController extends HttpServlet {
         try {
             Connection connection = Database.open();
             PreparedStatement statement;
-            ResultSet resultSet;
 
             int hospitalId = Integer.parseInt(req.getParameter("id"));
 

@@ -17,6 +17,10 @@
         <servlet-class>lk.spark.pasan.controllers.MohController</servlet-class>
     </servlet>
     <servlet>
+        <servlet-name>DoctorController</servlet-name>
+        <servlet-class>lk.spark.pasan.controllers.DoctorController</servlet-class>
+    </servlet>
+    <servlet>
         <servlet-name>HospitalController</servlet-name>
         <servlet-class>lk.spark.pasan.controllers.HospitalController</servlet-class>
     </servlet>
@@ -32,6 +36,10 @@
     <servlet-mapping>
         <servlet-name>MohController</servlet-name>
         <url-pattern>/moh/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>DoctorController</servlet-name>
+        <url-pattern>/doctor/*</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>HospitalController</servlet-name>

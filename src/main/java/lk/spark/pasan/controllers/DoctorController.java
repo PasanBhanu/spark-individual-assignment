@@ -3,7 +3,6 @@ package lk.spark.pasan.controllers;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import lk.spark.pasan.enums.HttpStatus;
-import lk.spark.pasan.enums.PatientStatus;
 import lk.spark.pasan.enums.Role;
 import lk.spark.pasan.helpers.Database;
 import lk.spark.pasan.helpers.DbFunctions;
@@ -21,17 +20,8 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Base64;
 
-@WebServlet(name = "MohController")
-public class MohController extends HttpServlet {
-
-    /**
-     * Create MOH user
-     *
-     * @param req
-     * @param resp
-     * @throws ServletException
-     * @throws IOException
-     */
+@WebServlet(name = "DoctorController")
+public class DoctorController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         JsonArray errorArray;
@@ -42,6 +32,9 @@ public class MohController extends HttpServlet {
         }
         if (req.getParameter("email").isEmpty()) {
             errorArray.add("Email is required");
+        }
+        if (req.getParameter("hospital_id").isEmpty()) {
+            errorArray.add("Assinged hospital is required");
         }
         if (req.getParameter("password").isEmpty()) {
             errorArray.add("Password is required");
@@ -59,8 +52,9 @@ public class MohController extends HttpServlet {
         String name = req.getParameter("name");
         String email = req.getParameter("email");
         String password = req.getParameter("password");
+        int hospitalId = Integer.parseInt(req.getParameter("hospital_id"));
 
-        int userId = 0;
+        int userId = 0, doctorId = 0;
 
         try {
             Connection connection = Database.open();
@@ -74,15 +68,25 @@ public class MohController extends HttpServlet {
                 statement.setString(1, name);
                 statement.setString(2, email);
                 statement.setString(3, Base64.getEncoder().encodeToString(password.getBytes()));
-                statement.setInt(4, Role.MOH.getRole());
+                statement.setInt(4, Role.DOCTOR.getRole());
                 statement.executeUpdate();
                 resultSet = statement.getGeneratedKeys();
                 if (resultSet.next()) {
                     userId = resultSet.getInt(1);
                 }
 
+                statement = connection.prepareStatement("INSERT INTO doctors (user_id, hospital_id) VALUES (?,?)", Statement.RETURN_GENERATED_KEYS);
+                statement.setInt(1, userId);
+                statement.setInt(2, hospitalId);
+                statement.executeUpdate();
+                resultSet = statement.getGeneratedKeys();
+                if (resultSet.next()) {
+                    doctorId = resultSet.getInt(1);
+                }
+
                 JsonObject dataObject = new JsonObject();
                 dataObject.addProperty("user_id", userId);
+                dataObject.addProperty("doctor_id", doctorId);
 
                 resp = Http.setResponse(resp, 200);
                 Http.getWriter(resp.getWriter(), HttpStatus.SUCCESS.getStatus(), "user added", dataObject, null).flush();
@@ -102,21 +106,54 @@ public class MohController extends HttpServlet {
         }
     }
 
-    /**
-     * Delete MOH user
-     *
-     * @param req
-     * @param resp
-     * @throws ServletException
-     * @throws IOException
-     */
+    @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        JsonArray errorArray;
+
+        errorArray = new JsonArray();
+        if (req.getParameter("id").isEmpty()) {
+            errorArray.add("Doctor id is required");
+
+            Http.setResponse(resp, 403);
+            Http.getWriter(resp.getWriter(), HttpStatus.ERROR.getStatus(), "forbidden", null, errorArray).flush();
+            return;
+        }
+
+        errorArray = new JsonArray();
+        if (req.getParameter("hospital_id").isEmpty()) {
+            errorArray.add("Hospital is required");
+        }
+        if (errorArray.size() > 0) {
+            Http.setResponse(resp, 400);
+            Http.getWriter(resp.getWriter(), HttpStatus.ERROR.getStatus(), "invalid data", null, errorArray).flush();
+            return;
+        }
+
+        try {
+            Connection connection = Database.open();
+            PreparedStatement statement = connection.prepareStatement("UPDATE doctors SET hospital_id=? WHERE id=?");
+            statement.setInt(1, Integer.parseInt(req.getParameter("hospital_id")));
+            statement.setInt(2, Integer.parseInt(req.getParameter("id")));
+            statement.executeUpdate();
+
+            Http.setResponse(resp, 200);
+            Http.getWriter(resp.getWriter(), HttpStatus.SUCCESS.getStatus(), "updated", null, null).flush();
+        } catch (Exception exception) {
+            errorArray = new JsonArray();
+            errorArray.add("Database connection failed");
+
+            resp = Http.setResponse(resp, 500);
+            Http.getWriter(resp.getWriter(), HttpStatus.ERROR.getStatus(), "server error", null, errorArray).flush();
+        }
+    }
+
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         JsonArray errorArray;
 
         errorArray = new JsonArray();
         if (req.getParameter("id").isEmpty()) {
-            errorArray.add("User id is required");
+            errorArray.add("Doctor id is required");
 
             Http.setResponse(resp, 403);
             Http.getWriter(resp.getWriter(), HttpStatus.ERROR.getStatus(), "forbidden", null, errorArray).flush();
@@ -129,17 +166,18 @@ public class MohController extends HttpServlet {
 
             int userId = Integer.parseInt(req.getParameter("id"));
 
-            statement = connection.prepareStatement("SELECT COUNT(*) FROM users WHERE role=1");
+            statement = connection.prepareStatement("SELECT COUNT(*) FROM hospitals WHERE user_id=?");
+            statement.setInt(1, userId);
             if (DbFunctions.count(statement.executeQuery()) == 0) {
-                statement = connection.prepareStatement("DELETE FROM users WHERE id=?");
+                statement = connection.prepareStatement("DELETE FROM doctors WHERE id=?");
                 statement.setInt(1, userId);
                 statement.executeUpdate();
 
                 resp = Http.setResponse(resp, 200);
-                Http.getWriter(resp.getWriter(), HttpStatus.SUCCESS.getStatus(), "hospital deleted", null, null).flush();
+                Http.getWriter(resp.getWriter(), HttpStatus.SUCCESS.getStatus(), "deleted", null, null).flush();
             } else {
                 errorArray = new JsonArray();
-                errorArray.add("System should have at least one MoH user");
+                errorArray.add("Doctor cannot be deleted until appointed as director of a hospital");
 
                 resp = Http.setResponse(resp, 400);
                 Http.getWriter(resp.getWriter(), HttpStatus.ERROR.getStatus(), "invalid data", null, errorArray).flush();

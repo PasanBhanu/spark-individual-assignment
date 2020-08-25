@@ -32,12 +32,18 @@ public class User {
 
     /**
      * Get user id
+     *
      * @return
      */
     public int getId() {
         return id;
     }
 
+    /**
+     * Get user role
+     *
+     * @return
+     */
     public Role getRole() {
         return role;
     }
