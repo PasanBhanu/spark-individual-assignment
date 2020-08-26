@@ -1,8 +1,6 @@
 package lk.spark.pasan.models;
 
 import com.google.gson.JsonObject;
-import lk.spark.pasan.enums.DeceaseLevel;
-import lk.spark.pasan.enums.PatientStatus;
 import lk.spark.pasan.enums.Role;
 import lk.spark.pasan.helpers.Database;
 import lk.spark.pasan.interfaces.DatabaseModel;
@@ -30,7 +28,7 @@ public class User implements DatabaseModel {
     /**
      * Create user with ID
      *
-     * @param id
+     * @param id User ID
      */
     public User(int id) {
         this.id = id;
@@ -39,9 +37,9 @@ public class User implements DatabaseModel {
     /**
      * Create new user
      *
-     * @param name
-     * @param email
-     * @param role
+     * @param name  User name
+     * @param email User email
+     * @param role  User role
      */
     public User(String name, String email, Role role) {
         this.name = name;
@@ -52,7 +50,7 @@ public class User implements DatabaseModel {
     /**
      * Get user id
      *
-     * @return
+     * @return User id
      */
     public int getId() {
         return id;
@@ -61,7 +59,7 @@ public class User implements DatabaseModel {
     /**
      * Get user role
      *
-     * @return
+     * @return User role
      */
     public Role getRole() {
         return role;
@@ -104,7 +102,7 @@ public class User implements DatabaseModel {
     /**
      * Serialise model to Json Object
      *
-     * @return
+     * @return Json Object
      */
     @Override
     public JsonObject serialize() {

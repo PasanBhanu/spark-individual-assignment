@@ -29,7 +29,7 @@ public class Patient extends User implements DatabaseModel {
     private Date admissionDate;
     private Date dischargedDate;
 
-    public User user;
+    private User user;
 
     /**
      * Create patient
@@ -92,7 +92,7 @@ public class Patient extends User implements DatabaseModel {
     /**
      * Serialise model to Json Object
      *
-     * @return
+     * @return Json object of model attributes
      */
     @Override
     public JsonObject serialize() {
