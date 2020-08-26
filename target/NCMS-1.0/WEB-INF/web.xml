@@ -28,6 +28,10 @@
         <servlet-name>StatController</servlet-name>
         <servlet-class>lk.spark.pasan.controllers.StatController</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>HospitalListController</servlet-name>
+        <servlet-class>lk.spark.pasan.controllers.HospitalListController</servlet-class>
+    </servlet>
     
     <servlet-mapping>
         <servlet-name>UserController</servlet-name>
@@ -52,5 +56,9 @@
     <servlet-mapping>
         <servlet-name>StatController</servlet-name>
         <url-pattern>/stats/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>HospitalListController</servlet-name>
+        <url-pattern>/lists/hospitals/*</url-pattern>
     </servlet-mapping>
 </web-app>
