@@ -21,9 +21,9 @@ public class Hospital implements DatabaseModel {
     private int geolocationX;
     private int geolocationY;
 
-    public Doctor director;
+    private Doctor director;
 
-    public ArrayList<Bed> beds;
+    private ArrayList<Bed> beds;
 
     public Hospital(int id) {
         this.id = id;
@@ -147,7 +147,7 @@ public class Hospital implements DatabaseModel {
      * @return
      */
     @Override
-    public JsonObject serialize(){
+    public JsonObject serialize() {
         JsonObject dataObject = new JsonObject();
 
         dataObject.addProperty("id", this.id);
