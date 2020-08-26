@@ -75,6 +75,9 @@ public class PatientController extends HttpServlet {
         if (req.getParameter("contact_number").isEmpty()) {
             errorArray.add("Contact number is required");
         }
+        if (req.getParameter("district").isEmpty()) {
+            errorArray.add("District is required");
+        }
         if (req.getParameter("password").isEmpty()) {
             errorArray.add("Password is required");
         }
@@ -98,6 +101,7 @@ public class PatientController extends HttpServlet {
         String email = req.getParameter("email");
         String password = req.getParameter("password");
         String contactNumber = req.getParameter("contact_number");
+        int district = Integer.parseInt(req.getParameter("district"));
 
         int geolocationX = 0, geolocationY = 0;
 
@@ -133,13 +137,14 @@ public class PatientController extends HttpServlet {
                     userId = resultSet.getInt(1);
                 }
 
-                statement = connection.prepareStatement("INSERT INTO patients (user_id, geolocation_x, geolocation_y, contact_number, status, register_date) VALUES (?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
+                statement = connection.prepareStatement("INSERT INTO patients (user_id, geolocation_x, geolocation_y, contact_number, district, status, register_date) VALUES (?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
                 statement.setInt(1, userId);
                 statement.setInt(2, geolocationX);
                 statement.setInt(3, geolocationY);
                 statement.setString(4, contactNumber);
-                statement.setInt(5, PatientStatus.IN_QUEUE.getStatus());
-                statement.setDate(6, new java.sql.Date(new java.util.Date().getTime()));
+                statement.setInt(5, district);
+                statement.setInt(6, PatientStatus.IN_QUEUE.getStatus());
+                statement.setDate(7, new java.sql.Date(new java.util.Date().getTime()));
                 statement.executeUpdate();
 
                 resultSet = statement.getGeneratedKeys();

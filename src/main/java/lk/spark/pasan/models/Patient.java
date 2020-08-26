@@ -21,6 +21,7 @@ public class Patient extends User implements DatabaseModel {
     private String serialNo;
     private int geolocationX;
     private int geolocationY;
+    private int district;
     private String contactNumber;
     private DeceaseLevel deceaseLevel;
     private PatientStatus patientStatus;
@@ -103,6 +104,7 @@ public class Patient extends User implements DatabaseModel {
         dataObject.addProperty("geolocation_x", this.geolocationX);
         dataObject.addProperty("geolocation_y", this.geolocationY);
         dataObject.addProperty("contact_number", this.contactNumber);
+        dataObject.addProperty("district", this.district);
         dataObject.addProperty("decease_level", this.deceaseLevel.getLevel());
         dataObject.addProperty("status", this.patientStatus.getStatus());
         dataObject.addProperty("register_date", this.registerDate.toString());
