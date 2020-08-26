@@ -1,10 +1,12 @@
 package lk.spark.pasan.enums;
 
+/**
+ * Http status of the JSON response
+ */
 public enum HttpStatus {
     SUCCESS("success"),
 
     ERROR("error");
-
 
     private String status;
 

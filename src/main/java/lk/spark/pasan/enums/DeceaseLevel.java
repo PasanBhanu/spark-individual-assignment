@@ -16,6 +16,7 @@ public enum DeceaseLevel {
 
     /**
      * Patient decease level
+     *
      * @param level
      */
     DeceaseLevel(int level) {
@@ -24,6 +25,7 @@ public enum DeceaseLevel {
 
     /**
      * Get patient decease level
+     *
      * @return
      */
     public int getLevel() {

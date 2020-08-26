@@ -14,6 +14,7 @@ public enum PatientStatus {
 
     /**
      * Patient status
+     *
      * @param status
      */
     PatientStatus(int status) {
@@ -22,6 +23,7 @@ public enum PatientStatus {
 
     /**
      * Get patient status
+     *
      * @return status
      */
     public int getStatus() {

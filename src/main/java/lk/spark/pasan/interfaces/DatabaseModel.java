@@ -15,6 +15,7 @@ public interface DatabaseModel {
 
     /**
      * Serialise public parameters of the model
+     *
      * @return
      */
     JsonObject serialize();
