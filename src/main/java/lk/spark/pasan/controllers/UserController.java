@@ -139,10 +139,13 @@ public class UserController extends HttpServlet {
      */
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+
+        // Override -> 0 - Check for old password. otherwise ignore!
+
         JsonArray errorArray;
 
         errorArray = new JsonArray();
-        if (req.getParameter("id").isEmpty()) {
+        if (req.getParameter("id").isEmpty() || req.getParameter("override").isEmpty()) {
             errorArray.add("User id is required");
 
             Http.setResponse(resp, 403);
@@ -150,11 +153,13 @@ public class UserController extends HttpServlet {
             return;
         }
 
+        int override = Integer.parseInt(req.getParameter("override"));
+
         errorArray = new JsonArray();
         if (req.getParameter("password").isEmpty()) {
             errorArray.add("Password is required");
         }
-        if (req.getParameter("old_password").isEmpty()) {
+        if (override == 0 && req.getParameter("old_password").isEmpty()) {
             errorArray.add("Old password is required");
         }
         if (!req.getParameter("password").equals(req.getParameter("c_password"))) {
@@ -169,35 +174,42 @@ public class UserController extends HttpServlet {
 
         int id = Integer.parseInt(req.getParameter("id"));
         String password = Base64.getEncoder().encodeToString(req.getParameter("password").getBytes());
-        String oldPassword = Base64.getEncoder().encodeToString(req.getParameter("old_password").getBytes());
+        String oldPassword = "";
+
+        if (override == 0){
+            oldPassword = Base64.getEncoder().encodeToString(req.getParameter("old_password").getBytes());
+        }
 
         try {
             Connection connection = Database.open();
             PreparedStatement statement;
 
-            statement = connection.prepareStatement("SELECT COUNT(*) FROM users WHERE password=? and id=?");
-            statement.setString(1, oldPassword);
-            statement.setInt(2, id);
-            if (DbFunctions.count(statement.executeQuery()) == 1) {
-                statement = connection.prepareStatement("UPDATE users SET password=? WHERE id=?");
-                statement.setString(1, password);
+            if (override == 0){
+                statement = connection.prepareStatement("SELECT COUNT(*) FROM users WHERE password=? and id=?");
+                statement.setString(1, oldPassword);
                 statement.setInt(2, id);
-                statement.executeUpdate();
+                if (DbFunctions.count(statement.executeQuery()) != 1) {
+                    errorArray = new JsonArray();
+                    errorArray.add("Old password is wrong");
 
-                connection.close();
-
-                JsonObject dataObject = new JsonObject();
-                dataObject.addProperty("user_id", id);
-
-                resp = Http.setResponse(resp, 200);
-                Http.getWriter(resp.getWriter(), HttpStatus.SUCCESS.getStatus(), "password updated", dataObject, null).flush();
-            } else {
-                errorArray = new JsonArray();
-                errorArray.add("Old password is wrong");
-
-                resp = Http.setResponse(resp, 400);
-                Http.getWriter(resp.getWriter(), HttpStatus.ERROR.getStatus(), "invalid data", null, errorArray).flush();
+                    resp = Http.setResponse(resp, 400);
+                    Http.getWriter(resp.getWriter(), HttpStatus.ERROR.getStatus(), "invalid data", null, errorArray).flush();
+                    return;
+                }
             }
+
+            statement = connection.prepareStatement("UPDATE users SET password=? WHERE id=?");
+            statement.setString(1, password);
+            statement.setInt(2, id);
+            statement.executeUpdate();
+
+            connection.close();
+
+            JsonObject dataObject = new JsonObject();
+            dataObject.addProperty("user_id", id);
+
+            resp = Http.setResponse(resp, 200);
+            Http.getWriter(resp.getWriter(), HttpStatus.SUCCESS.getStatus(), "password updated", dataObject, null).flush();
         } catch (Exception e) {
             errorArray = new JsonArray();
             errorArray.add("Database connection failed");
@@ -206,4 +218,5 @@ public class UserController extends HttpServlet {
             Http.getWriter(resp.getWriter(), HttpStatus.ERROR.getStatus(), "server error", null, errorArray).flush();
         }
     }
+
 }

@@ -40,6 +40,10 @@
         <servlet-name>PatientListController</servlet-name>
         <servlet-class>lk.spark.pasan.controllers.PatientListController</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>UserListController</servlet-name>
+        <servlet-class>lk.spark.pasan.controllers.UserListController</servlet-class>
+    </servlet>
     
     <servlet-mapping>
         <servlet-name>UserController</servlet-name>
@@ -76,5 +80,9 @@
     <servlet-mapping>
         <servlet-name>PatientListController</servlet-name>
         <url-pattern>/lists/patients/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>UserListController</servlet-name>
+        <url-pattern>/lists/users/*</url-pattern>
     </servlet-mapping>
 </web-app>
