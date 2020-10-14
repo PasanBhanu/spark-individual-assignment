@@ -97,6 +97,7 @@ public class Hospital implements DatabaseModel {
             statement.setInt(1, this.id);
             resultSet = statement.executeQuery();
             while (resultSet.next()) {
+                this.name = resultSet.getString("name");
                 this.userId = resultSet.getInt("user_id");
                 this.district = resultSet.getInt("district");
                 this.geolocationX = resultSet.getInt("geolocation_x");
