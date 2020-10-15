@@ -121,18 +121,6 @@ public class Patient extends User implements DatabaseModel {
     }
 
     /**
-     * Load relationships
-     */
-    @Override
-    public void loadRelationalModels() {
-        User user = new User(this.userId);
-        user.loadModel();
-        this.email = user.email;
-        this.name = user.name;
-        this.role = Role.USER;
-    }
-
-    /**
      * Serialise model to Json Object
      *
      * @return Json object of model attributes

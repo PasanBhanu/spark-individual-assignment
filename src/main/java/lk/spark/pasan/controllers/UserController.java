@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.Base64;
 
 /**
@@ -97,12 +98,18 @@ public class UserController extends HttpServlet {
             return;
         }
 
+        User user = new User(Integer.parseInt(req.getParameter("id")));
+        user.loadModel();
+
         errorArray = new JsonArray();
-        if (req.getParameter("name").isEmpty()) {
-            errorArray.add("Name is required");
-        }
-        if (req.getParameter("email").isEmpty()) {
-            errorArray.add("Email is required");
+        switch (user.getRole()) {
+            case MOH:
+                errorArray = validateMoh(req);
+                break;
+
+            case DOCTOR:
+                errorArray = validateDoctor(req);
+                break;
         }
 
         if (errorArray.size() > 0) {
@@ -129,7 +136,11 @@ public class UserController extends HttpServlet {
                 statement.setInt(3, id);
                 statement.executeUpdate();
 
-                connection.close();
+                // User based updates
+                switch (user.getRole()){
+                    case DOCTOR:
+                        updateDoctor(req);
+                }
 
                 JsonObject dataObject = new JsonObject();
                 dataObject.addProperty("user_id", id);
@@ -239,6 +250,71 @@ public class UserController extends HttpServlet {
 
             resp = Http.setResponse(resp, 500);
             Http.getWriter(resp.getWriter(), HttpStatus.ERROR.getStatus(), "server error", null, errorArray).flush();
+        }
+    }
+
+
+    /**
+     * Validate inputs of Moh
+     *
+     * @param req
+     * @return
+     */
+    private JsonArray validateMoh(HttpServletRequest req) {
+        JsonArray errorArray = new JsonArray();
+
+        if (req.getParameter("name").isEmpty()) {
+            errorArray.add("Name is required");
+        }
+        if (req.getParameter("email").isEmpty()) {
+            errorArray.add("Email is required");
+        }
+
+        return errorArray;
+    }
+
+    /**
+     * Validate inputs of Doctor
+     *
+     * @param req
+     * @return
+     */
+    private JsonArray validateDoctor(HttpServletRequest req) {
+        JsonArray errorArray = new JsonArray();
+
+        if (req.getParameter("name").isEmpty()) {
+            errorArray.add("Name is required");
+        }
+        if (req.getParameter("email").isEmpty()) {
+            errorArray.add("Email is required");
+        }
+        if (req.getParameter("hospital_id").isEmpty()) {
+            errorArray.add("Hospital is required");
+        }
+
+        return errorArray;
+    }
+
+    /**
+     * Add moh user to database
+     * @param req
+     * @return
+     */
+    private void updateDoctor(HttpServletRequest req) {
+        try {
+            Connection connection = Database.open();
+            PreparedStatement statement;
+            ResultSet resultSet;
+            int userId = 0;
+
+            statement = connection.prepareStatement("UPDATE doctors SET hospital_id=? WHERE user_id=?");
+            statement.setString(1, req.getParameter("hospital_id"));
+            statement.setString(2, req.getParameter("id"));
+            statement.executeUpdate();
+
+            connection.close();
+        } catch (Exception e) {
+
         }
     }
 
