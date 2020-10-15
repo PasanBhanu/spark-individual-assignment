@@ -163,6 +163,93 @@ public class UserController extends HttpServlet {
         }
     }
 
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        JsonArray errorArray;
+
+        errorArray = new JsonArray();
+        if (req.getParameter("id").isEmpty()) {
+            errorArray.add("User id is required");
+
+            Http.setResponse(resp, 403);
+            Http.getWriter(resp.getWriter(), HttpStatus.ERROR.getStatus(), "forbidden", null, errorArray).flush();
+            return;
+        }
+
+        User user = new User(Integer.parseInt(req.getParameter("id")));
+        user.loadModel();
+
+        try {
+            Connection connection = Database.open();
+            PreparedStatement statement;
+
+            int userId = Integer.parseInt(req.getParameter("id"));
+
+            if (user.getRole() == Role.MOH){
+                statement = connection.prepareStatement("DELETE FROM users WHERE id=?");
+                statement.setInt(1, userId);
+                statement.executeUpdate();
+
+                resp = Http.setResponse(resp, 200);
+                Http.getWriter(resp.getWriter(), HttpStatus.SUCCESS.getStatus(), "moh deleted", null, null).flush();
+            }
+
+            if (user.getRole() == Role.DOCTOR){
+                statement = connection.prepareStatement("SELECT COUNT(*) FROM hospitals WHERE user_id=?");
+                statement.setInt(1, userId);
+                if (DbFunctions.count(statement.executeQuery()) == 0) {
+                    statement = connection.prepareStatement("DELETE FROM doctors WHERE user_id=?");
+                    statement.setInt(1, userId);
+                    statement.executeUpdate();
+
+                    statement = connection.prepareStatement("DELETE FROM users WHERE id=?");
+                    statement.setInt(1, userId);
+                    statement.executeUpdate();
+
+                    resp = Http.setResponse(resp, 200);
+                    Http.getWriter(resp.getWriter(), HttpStatus.SUCCESS.getStatus(), "hospital deleted", null, null).flush();
+                } else {
+                    errorArray = new JsonArray();
+                    errorArray.add("Doctor is assinged to a hospital. Please remove him as director and retry");
+
+                    resp = Http.setResponse(resp, 400);
+                    Http.getWriter(resp.getWriter(), HttpStatus.ERROR.getStatus(), "doctor data", null, errorArray).flush();
+                }
+            }
+
+            if (user.getRole() == Role.USER){
+                statement = connection.prepareStatement("SELECT COUNT(*) FROM patients WHERE user_id=? AND serial_no IS NOT NULL AND discharged_date IS NULL");
+                statement.setInt(1, userId);
+                if (DbFunctions.count(statement.executeQuery()) == 0) {
+                    statement = connection.prepareStatement("DELETE FROM patients WHERE user_id=?");
+                    statement.setInt(1, userId);
+                    statement.executeUpdate();
+
+                    statement = connection.prepareStatement("DELETE FROM users WHERE id=?");
+                    statement.setInt(1, userId);
+                    statement.executeUpdate();
+
+                    resp = Http.setResponse(resp, 200);
+                    Http.getWriter(resp.getWriter(), HttpStatus.SUCCESS.getStatus(), "patient deleted", null, null).flush();
+                } else {
+                    errorArray = new JsonArray();
+                    errorArray.add("Patient is already admitted to a hospital. Please discharge him before delete");
+
+                    resp = Http.setResponse(resp, 400);
+                    Http.getWriter(resp.getWriter(), HttpStatus.ERROR.getStatus(), "invalid data", null, errorArray).flush();
+                }
+            }
+
+
+        } catch (Exception e) {
+            errorArray = new JsonArray();
+            errorArray.add("Database connection failed");
+
+            resp = Http.setResponse(resp, 500);
+            Http.getWriter(resp.getWriter(), HttpStatus.ERROR.getStatus(), "server error", null, errorArray).flush();
+        }
+    }
+
     /**
      * Update user password
      *
