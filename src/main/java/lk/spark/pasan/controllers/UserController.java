@@ -3,9 +3,12 @@ package lk.spark.pasan.controllers;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import lk.spark.pasan.enums.HttpStatus;
+import lk.spark.pasan.enums.Role;
 import lk.spark.pasan.helpers.Database;
 import lk.spark.pasan.helpers.DbFunctions;
 import lk.spark.pasan.helpers.Http;
+import lk.spark.pasan.models.Doctor;
+import lk.spark.pasan.models.Patient;
 import lk.spark.pasan.models.User;
 
 import javax.servlet.ServletException;
@@ -49,8 +52,28 @@ public class UserController extends HttpServlet {
         User user = new User(Integer.parseInt(req.getParameter("id")));
         user.loadModel();
 
+        JsonObject dataObject = null;
+
+        switch (user.getRole()){
+            case DOCTOR:
+                Doctor doctor = new Doctor();
+                doctor.loadModel(user.getId());
+                dataObject = doctor.serialize();
+                break;
+
+            case MOH:
+                dataObject = user.serialize();
+                break;
+
+            case USER:
+                Patient patient = new Patient();
+                patient.loadModel(user.getId());
+                dataObject = patient.serialize();
+                break;
+        }
+
         Http.setResponse(resp, 200);
-        Http.getWriter(resp.getWriter(), HttpStatus.SUCCESS.getStatus(), "loaded", user.serialize(), null).flush();
+        Http.getWriter(resp.getWriter(), HttpStatus.SUCCESS.getStatus(), "loaded", dataObject, null).flush();
     }
 
     /**

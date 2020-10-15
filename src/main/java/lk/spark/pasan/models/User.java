@@ -14,9 +14,9 @@ import java.sql.ResultSet;
  */
 public class User implements DatabaseModel {
     private int id;
-    private String name;
-    private String email;
-    private Role role;
+    protected String name;
+    protected String email;
+    protected Role role;
 
     /**
      * Default constructor
