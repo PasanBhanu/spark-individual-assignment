@@ -13,6 +13,10 @@
         <servlet-class>lk.spark.pasan.controllers.RegisterController</servlet-class>
     </servlet>
     <servlet>
+        <servlet-name>ProfileController</servlet-name>
+        <servlet-class>lk.spark.pasan.controllers.ProfileController</servlet-class>
+    </servlet>
+    <servlet>
         <servlet-name>UserController</servlet-name>
         <servlet-class>lk.spark.pasan.controllers.UserController</servlet-class>
     </servlet>
@@ -61,6 +65,10 @@
     <servlet-mapping>
         <servlet-name>RegisterController</servlet-name>
         <url-pattern>/register/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ProfileController</servlet-name>
+        <url-pattern>/profile/*</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>UserController</servlet-name>
