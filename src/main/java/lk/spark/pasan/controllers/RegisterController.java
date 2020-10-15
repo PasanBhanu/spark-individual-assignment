@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import lk.spark.pasan.enums.HttpStatus;
 import lk.spark.pasan.helpers.Database;
+import lk.spark.pasan.helpers.DbFunctions;
 import lk.spark.pasan.helpers.Http;
 
 import javax.servlet.ServletException;
@@ -68,36 +69,58 @@ public class RegisterController extends HttpServlet {
             return;
         }
 
-        int userId = 0;
-        switch (role) {
-            case 0:
-                userId = addPatient(req);
-                break;
+        try {
+            Connection connection = Database.open();
+            PreparedStatement statement;
 
-            case 1:
-                userId = addMoh(req);
-                break;
+            statement = connection.prepareStatement("SELECT COUNT(*) FROM users WHERE email=?");
+            statement.setString(1, req.getParameter("email"));
+            if (DbFunctions.count(statement.executeQuery()) == 0) {
+                int userId = 0;
+                switch (role) {
+                    case 0:
+                        userId = addPatient(req);
+                        break;
 
-            case 2:
-                userId = addDoctor(req);
-                break;
-        }
+                    case 1:
+                        userId = addMoh(req);
+                        break;
 
-        if (userId > 0) {
-            JsonObject dataObject = new JsonObject();
-            dataObject.addProperty("userId", userId);
-            dataObject.addProperty("role", role);
+                    case 2:
+                        userId = addDoctor(req);
+                        break;
+                }
 
-            resp = Http.setResponse(resp, 200);
-            Http.getWriter(resp.getWriter(), HttpStatus.SUCCESS.getStatus(), "user added", dataObject, null).flush();
-        } else {
+                if (userId > 0) {
+                    JsonObject dataObject = new JsonObject();
+                    dataObject.addProperty("userId", userId);
+                    dataObject.addProperty("role", role);
+
+                    resp = Http.setResponse(resp, 200);
+                    Http.getWriter(resp.getWriter(), HttpStatus.SUCCESS.getStatus(), "user added", dataObject, null).flush();
+                } else {
+                    errorArray = new JsonArray();
+                    errorArray.add("Database connection failed");
+
+                    resp = Http.setResponse(resp, 500);
+                    Http.getWriter(resp.getWriter(), HttpStatus.ERROR.getStatus(), "server error", null, errorArray).flush();
+                }
+            } else {
+                errorArray = new JsonArray();
+                errorArray.add("Email already in the system");
+
+                resp = Http.setResponse(resp, 400);
+                Http.getWriter(resp.getWriter(), HttpStatus.ERROR.getStatus(), "invalid data", null, errorArray).flush();
+            }
+
+            connection.close();
+        } catch (Exception e) {
             errorArray = new JsonArray();
             errorArray.add("Database connection failed");
 
             resp = Http.setResponse(resp, 500);
             Http.getWriter(resp.getWriter(), HttpStatus.ERROR.getStatus(), "server error", null, errorArray).flush();
         }
-
     }
 
     /**

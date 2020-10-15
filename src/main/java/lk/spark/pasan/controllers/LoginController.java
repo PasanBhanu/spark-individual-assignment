@@ -60,7 +60,7 @@ public class LoginController extends HttpServlet {
             PreparedStatement statement;
             ResultSet resultSet;
 
-            statement = connection.prepareStatement("SELECT id,role FROM users WHERE password=? and email=?");
+            statement = connection.prepareStatement("SELECT Count(*) AS count, id,role FROM users WHERE password=? and email=?");
             statement.setString(1, password);
             statement.setString(2, email);
 
