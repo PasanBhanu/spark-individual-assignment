@@ -154,7 +154,7 @@ public class Hospital implements DatabaseModel {
         dataObject.addProperty("id", this.id);
         dataObject.addProperty("name", this.name);
         dataObject.addProperty("user_id", this.userId);
-        dataObject.addProperty("district", this.userId);
+        dataObject.addProperty("district", this.district);
         dataObject.addProperty("geolocation_x", this.geolocationX);
         dataObject.addProperty("geolocation_y", this.geolocationY);
 

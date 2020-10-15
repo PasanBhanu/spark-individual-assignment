@@ -38,7 +38,7 @@ public class PatientController extends HttpServlet {
         JsonArray errorArray;
 
         errorArray = new JsonArray();
-        if (req.getParameter("id").isEmpty()) {
+        if (req.getParameter("id").isEmpty() && req.getParameter("ref").isEmpty()) {
             errorArray.add("User id is required");
 
             Http.setResponse(resp, 403);
@@ -46,9 +46,18 @@ public class PatientController extends HttpServlet {
             return;
         }
 
-        Patient patient = new Patient(Integer.parseInt(req.getParameter("id")));
-        patient.loadModel();
-        patient.loadRelationalModels();
+        // Search using Patient ID -> ref not present OR Search using User ID -> ref=1
+        Patient patient = null;
+        int ref = Integer.parseInt(req.getParameter("ref"));
+        if (ref == 0) {
+            patient = new Patient(Integer.parseInt(req.getParameter("id")));
+            patient.loadModel();
+            patient.loadRelationalModels();
+        }else{
+            patient = new Patient();
+            patient.loadModel(Integer.parseInt(req.getParameter("id")));
+            patient.loadRelationalModels();
+        }
 
         Http.setResponse(resp, 200);
         Http.getWriter(resp.getWriter(), HttpStatus.SUCCESS.getStatus(), "loaded", patient.serialize(), null).flush();
