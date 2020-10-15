@@ -107,7 +107,7 @@ public class Doctor extends User implements DatabaseModel {
         dataObject.addProperty("name", this.name);
         dataObject.addProperty("email", this.email);
         dataObject.addProperty("role", this.role.getRole());
-        dataObject.addProperty("hospitalId", this.hospitalId);
+        dataObject.addProperty("hospital_id", this.hospitalId);
 
         return dataObject;
     }

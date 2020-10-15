@@ -246,6 +246,9 @@ public class RegisterController extends HttpServlet {
             statement.setDate(6, new java.sql.Date(new java.util.Date().getTime()));
             statement.executeUpdate();
 
+            AllocateBedsController allocateBedsController = new AllocateBedsController();
+            allocateBedsController.allocateBeds();
+
             connection.close();
 
             return userId;

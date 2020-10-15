@@ -77,7 +77,7 @@ public class PatientListController extends HttpServlet {
                 patient.addProperty("geolocation_x", resultSet.getInt("geolocation_x"));
                 patient.addProperty("geolocation_y", resultSet.getInt("geolocation_y"));
                 patient.addProperty("district", resultSet.getInt("district"));
-                patient.addProperty("contact_number", resultSet.getInt("contact_number"));
+                patient.addProperty("contact_number", resultSet.getString("contact_number"));
                 patient.addProperty("decease_level", resultSet.getInt("decease_level"));
                 patient.addProperty("status", resultSet.getInt("status"));
                 patient.addProperty("register_date", resultSet.getDate("register_date").toString());
