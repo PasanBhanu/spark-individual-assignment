@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Generate stats for display
@@ -45,9 +47,16 @@ public class StatController extends HttpServlet {
             JsonObject districtWisePatients = new JsonObject();
             statement = connection.prepareStatement("SELECT district, COUNT(*) as count FROM patients WHERE status=1 GROUP BY district");
             resultSet = statement.executeQuery();
+
+            JsonArray label = new JsonArray();
+            JsonArray dataPoints = new JsonArray();
+
             while (resultSet.next()) {
-                districtWisePatients.addProperty(resultSet.getString("district"), resultSet.getInt("count"));
+                label.add("District " + resultSet.getInt("district"));
+                dataPoints.add(resultSet.getInt("count"));
             }
+            districtWisePatients.add("label", label);
+            districtWisePatients.add("data", dataPoints);
             data.add("district", districtWisePatients);
 
             JsonObject dailyStats = new JsonObject();
@@ -62,19 +71,38 @@ public class StatController extends HttpServlet {
             data.add("daily_status", dailyStats);
 
             JsonObject totalStats = new JsonObject();
-            statement = connection.prepareStatement("SELECT status, COUNT(*) as count FROM patients GROUP BY status");
+            statement = connection.prepareStatement("SELECT status, COUNT(*) as count FROM patients GROUP BY status ORDER BY status ASC");
             resultSet = statement.executeQuery();
+
+            label = new JsonArray();
+            dataPoints = new JsonArray();
+
             while (resultSet.next()) {
-                totalStats.addProperty(resultSet.getString("status"), resultSet.getInt("count"));
+                dataPoints.add(resultSet.getInt("count"));
             }
+            label.add("In Queue");
+            label.add("Hospitalised");
+            label.add("Discharged");
+            totalStats.add("label", label);
+            totalStats.add("data", dataPoints);
+
             data.add("total_status", totalStats);
 
             JsonObject dayVsPatients = new JsonObject();
             statement = connection.prepareStatement("SELECT register_date, COUNT(*) as count FROM patients GROUP BY register_date ORDER BY register_date DESC LIMIT 30");
             resultSet = statement.executeQuery();
+
+            label = new JsonArray();
+            dataPoints = new JsonArray();
+
             while (resultSet.next()) {
-                dayVsPatients.addProperty(resultSet.getString("register_date"), resultSet.getInt("count"));
+                label.add(resultSet.getString("register_date"));
+                dataPoints.add(resultSet.getInt("count"));
             }
+
+            dayVsPatients.add("label", label);
+            dayVsPatients.add("data", dataPoints);
+
             data.add("days", dayVsPatients);
 
             Http.setResponse(resp, 200);
