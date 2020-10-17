@@ -16,9 +16,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
-@WebServlet (name = "HospitalListController")
-public class HospitalListController extends HttpServlet {
-
+@WebServlet(name = "UserListController")
+public class UserListController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         JsonArray errorArray;
@@ -29,25 +28,22 @@ public class HospitalListController extends HttpServlet {
             Connection connection = Database.open();
             PreparedStatement statement;
             ResultSet resultSet;
-            JsonArray hospitals = new JsonArray();
+            JsonArray users = new JsonArray();
 
-            statement = connection.prepareStatement("SELECT hospitals.*, users.name AS director, (SELECT COUNT(*) FROM beds WHERE beds.hospital_id = hospitals.id AND beds.serial_no IS NOT NULL) AS patient_count FROM hospitals INNER JOIN users ON users.id = hospitals.user_id");
+            statement = connection.prepareStatement("SELECT users.*, hospitals.name as hospital FROM users LEFT JOIN doctors ON doctors.user_id = users.id LEFT JOIN hospitals ON hospitals.id = doctors.hospital_id WHERE users.role=2 or users.role=1");
             resultSet = statement.executeQuery();
             while (resultSet.next()) {
-                JsonObject hospital = new JsonObject();
-                hospital.addProperty("id", resultSet.getString("id"));
-                hospital.addProperty("name", resultSet.getString("name"));
-                hospital.addProperty("director", resultSet.getString("director"));
-                hospital.addProperty("user_id", resultSet.getInt("user_id"));
-                hospital.addProperty("geolocation_x", resultSet.getInt("geolocation_x"));
-                hospital.addProperty("geolocation_y", resultSet.getInt("geolocation_y"));
-                hospital.addProperty("district", resultSet.getInt("district"));
-                hospital.addProperty("patient_count", resultSet.getInt("patient_count"));
-                hospitals.add(hospital);
+                JsonObject user = new JsonObject();
+                user.addProperty("id", resultSet.getString("id"));
+                user.addProperty("name", resultSet.getString("name"));
+                user.addProperty("email", resultSet.getString("email"));
+                user.addProperty("hospital", resultSet.getString("hospital"));
+                user.addProperty("role", resultSet.getInt("role"));
+                users.add(user);
             }
 
             Http.setResponse(resp, 200);
-            Http.getWriter(resp.getWriter(), HttpStatus.SUCCESS.getStatus(), "loaded", hospitals, null).flush();
+            Http.getWriter(resp.getWriter(), HttpStatus.SUCCESS.getStatus(), "loaded", users, null).flush();
 
             connection.close();
         } catch (Exception exception) {
