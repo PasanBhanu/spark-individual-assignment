@@ -5,7 +5,7 @@ Individual assignment for SparkX. A Covid Management System to manage hospitals 
 
 Backend   : [View Repository](https://github.com/PasanBhanu/spark-individual-assignment)
 
-Frontend  : [View Repository](#)
+Frontend  : [View Repository](https://github.com/PasanBhanu/spark-individual-assignment-frontend)
 
 # Instructions
 - Clone the repository
