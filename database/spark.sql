@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 26, 2020 at 07:55 PM
+-- Generation Time: Oct 18, 2020 at 03:12 PM
 -- Server version: 10.1.38-MariaDB
 -- PHP Version: 7.3.3
 
@@ -39,16 +39,56 @@ CREATE TABLE `beds` (
 --
 
 INSERT INTO `beds` (`id`, `hospital_id`, `serial_no`) VALUES
-(41, 5, '4c07fb15-7e25-4671-accd-7c236d847c63'),
-(42, 5, '4c07fb15-7e25-4671-accd-7c236d847c62'),
-(43, 5, '4c07fb15-7e25-4671-accd-7c236d847c61'),
+(41, 5, NULL),
+(42, 5, NULL),
+(43, 5, NULL),
 (44, 5, NULL),
 (45, 5, NULL),
 (46, 5, NULL),
 (47, 5, NULL),
 (48, 5, NULL),
 (49, 5, NULL),
-(50, 5, NULL);
+(50, 5, NULL),
+(51, 6, 'f1877484-bbb3-4df0-8842-44ed63c5ce43'),
+(52, 6, 'ed7b38bf-44a2-4c84-9326-dc9dd62d09c8'),
+(53, 6, NULL),
+(54, 6, NULL),
+(55, 6, NULL),
+(56, 6, NULL),
+(57, 6, NULL),
+(58, 6, NULL),
+(59, 6, NULL),
+(60, 6, NULL),
+(61, 7, NULL),
+(62, 7, NULL),
+(63, 7, NULL),
+(64, 7, NULL),
+(65, 7, NULL),
+(66, 7, NULL),
+(67, 7, NULL),
+(68, 7, NULL),
+(69, 7, NULL),
+(70, 7, NULL),
+(71, 8, 'eb55fa36-7b67-44ca-b85e-079c5fda813a'),
+(72, 8, NULL),
+(73, 8, NULL),
+(74, 8, NULL),
+(75, 8, NULL),
+(76, 8, NULL),
+(77, 8, NULL),
+(78, 8, NULL),
+(79, 8, NULL),
+(80, 8, NULL),
+(81, 9, NULL),
+(82, 9, NULL),
+(83, 9, NULL),
+(84, 9, NULL),
+(85, 9, NULL),
+(86, 9, NULL),
+(87, 9, NULL),
+(88, 9, NULL),
+(89, 9, NULL),
+(90, 9, NULL);
 
 -- --------------------------------------------------------
 
@@ -61,6 +101,14 @@ CREATE TABLE `doctors` (
   `user_id` bigint(20) NOT NULL,
   `hospital_id` bigint(20) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `doctors`
+--
+
+INSERT INTO `doctors` (`id`, `user_id`, `hospital_id`) VALUES
+(1, 2, 5),
+(3, 16, 5);
 
 -- --------------------------------------------------------
 
@@ -82,7 +130,11 @@ CREATE TABLE `hospitals` (
 --
 
 INSERT INTO `hospitals` (`id`, `name`, `user_id`, `district`, `geolocation_x`, `geolocation_y`) VALUES
-(5, 'Pasan', 1, 1, 1, 2);
+(5, 'District 5 Hospital', 2, 5, 450, 400),
+(6, 'District 4 Hospital', 2, 4, 150, 450),
+(7, 'District 3 Hospital', 2, 3, 150, 250),
+(8, 'District 1 Hospital', 2, 1, 200, 100),
+(9, 'District 2 Hospital', 2, 2, 500, 100);
 
 -- --------------------------------------------------------
 
@@ -110,9 +162,9 @@ CREATE TABLE `patients` (
 --
 
 INSERT INTO `patients` (`id`, `user_id`, `serial_no`, `geolocation_x`, `geolocation_y`, `contact_number`, `district`, `decease_level`, `status`, `register_date`, `admission_date`, `discharged_date`) VALUES
-(1, 1, NULL, 1, 2, '123456', 1, 2, 1, '2020-08-21', NULL, NULL),
-(2, 1, '4c07fb15-7e25-4671-accd-7c236d847c62', 1, 2, '123456', 2, 2, 1, '2020-08-21', '2020-08-23', '2020-08-23'),
-(4, 1, '4c07fb15-7e25-4671-accd-7c236d847c61', 1, 2, '123456', 1, 2, 1, '2020-08-21', '2020-08-23', '2020-08-23');
+(7, 7, 'ed7b38bf-44a2-4c84-9326-dc9dd62d09c8', 456, 456, '0715445904', 1, 0, 1, '2020-10-15', '2020-10-15', NULL),
+(8, 8, 'f1877484-bbb3-4df0-8842-44ed63c5ce43', 123, 123, '0111234567', 1, 1, 1, '2020-10-15', '2020-10-15', NULL),
+(9, 14, 'eb55fa36-7b67-44ca-b85e-079c5fda813a', 100, 50, '0715454904', 1, 0, 1, '2020-10-15', '2020-10-15', NULL);
 
 -- --------------------------------------------------------
 
@@ -133,7 +185,13 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`) VALUES
-(1, 'Pasan', 'pasanbguruge@gmail.com', 'MTIz', 0);
+(1, 'MOH\r\n', 'moh@spark.lk', 'cGFzc3dvcmQ=', 1),
+(2, 'Doctor', 'doctor@moh.lk', 'cGFzc3dvcmQ=', 2),
+(7, 'Patient 1', 'patient1@spark.lk', 'MTIz', 0),
+(8, 'Patient 2', 'patient2@spark.lk', 'MTIz', 0),
+(13, 'pasanbguruge@gmail.com', 'pasanbguruge@33gmail.com', 'MTIz', 1),
+(14, 'Patient', 'patient@spark.lk', 'cGFzc3dvcmQ=', 0),
+(16, 'Doctor 1', 'doctor1@spark.lk', 'cGFzcw==', 2);
 
 --
 -- Indexes for dumped tables
@@ -184,31 +242,31 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `beds`
 --
 ALTER TABLE `beds`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=91;
 
 --
 -- AUTO_INCREMENT for table `doctors`
 --
 ALTER TABLE `doctors`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `hospitals`
 --
 ALTER TABLE `hospitals`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `patients`
 --
 ALTER TABLE `patients`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- Constraints for dumped tables
