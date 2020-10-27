@@ -61,9 +61,13 @@ public class PatientListController extends HttpServlet {
                 statement = connection.prepareStatement("SELECT patients.*, users.name, users.email, hospitals.name as hospital FROM patients INNER JOIN users ON users.id = patients.user_id LEFT JOIN beds ON beds.serial_no = patients.serial_no LEFT JOIN hospitals ON beds.hospital_id = hospitals.id WHERE patients.status=?");
                 statement.setInt(1, status);
             } else {
-                statement = connection.prepareStatement("SELECT patients.*, users.name, users.email, hospitals.name as hospital FROM patients INNER JOIN users ON users.id = patients.user_id LEFT JOIN beds ON beds.serial_no = patients.serial_no LEFT JOIN hospitals ON beds.hospital_id = hospitals.id WHERE patients.status=? and hospitals.id=?");
-                statement.setInt(1, status);
-                statement.setInt(2, hospital);
+                if (status != 2){
+                    statement = connection.prepareStatement("SELECT patients.*, users.name, users.email, hospitals.name as hospital FROM patients INNER JOIN users ON users.id = patients.user_id LEFT JOIN beds ON beds.serial_no = patients.serial_no LEFT JOIN hospitals ON beds.hospital_id = hospitals.id WHERE patients.status=? and hospitals.id=?");
+                    statement.setInt(1, status);
+                    statement.setInt(2, hospital);
+                }else{
+                    statement = connection.prepareStatement("SELECT patients.*, users.name, users.email, hospitals.name as hospital FROM patients INNER JOIN users ON users.id = patients.user_id LEFT JOIN beds ON beds.serial_no = patients.serial_no LEFT JOIN hospitals ON beds.hospital_id = hospitals.id WHERE patients.status=2");
+                }
             }
             resultSet = statement.executeQuery();
             while (resultSet.next()) {
