@@ -71,11 +71,23 @@ public class StatController extends HttpServlet {
             data.add("daily_status", dailyStats);
 
             JsonObject totalStats = new JsonObject();
-            statement = connection.prepareStatement("SELECT status, COUNT(*) as count FROM patients GROUP BY status ORDER BY status ASC");
-            resultSet = statement.executeQuery();
-
             label = new JsonArray();
             dataPoints = new JsonArray();
+
+            statement = connection.prepareStatement("SELECT status, COUNT(*) as count FROM patients WHERE status=0");
+            resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                dataPoints.add(resultSet.getInt("count"));
+            }
+            statement = connection.prepareStatement("SELECT status, COUNT(*) as count FROM patients WHERE status=1");
+            resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                dataPoints.add(resultSet.getInt("count"));
+            }
+            statement = connection.prepareStatement("SELECT status, COUNT(*) as count FROM patients WHERE status=2");
+            resultSet = statement.executeQuery();
 
             while (resultSet.next()) {
                 dataPoints.add(resultSet.getInt("count"));
